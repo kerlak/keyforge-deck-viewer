@@ -1,0 +1,204 @@
+<style>
+
+    @font-face {
+        font-family: TeutonFont;
+        src: url('https://cors-anywhere.herokuapp.com/https://www.keyforgegame.com/fonts/RopaSans-Regular-a12c4d26321b3c9a9519c32067c10518.woff');
+    }
+
+    body {
+        font-family: TeutonFont;
+    }
+
+    h1 {
+        text-align: center;
+    }
+
+    .search_form {
+        width: 100%;
+        text-align: center;
+    }
+
+    .search_form input {
+        border: 1px solid #aca38d;
+        box-shadow: 3px rgba(195, 185, 160, 0.69);
+        background: none;
+        min-width: 400px;
+        padding: 0 1.2rem;
+        color: #5a5145;
+        font-size: 18px;
+    } 
+
+    ul {
+        display: flex;
+        flex-flow: wrap;
+        list-style: none;
+    }
+
+    .card-content {
+        position: relative;
+        transform-style: preserve-3d;
+        text-align: center;
+    }
+
+    .card-content span {
+        font-family: Arial, Helvetica, sans-serif;
+        position: absolute;
+        width: 100%;
+        color: white;
+        text-shadow: 
+        -1px -1px 1px #111, 
+        1px 1px 1px #363636;
+
+        transition: 400ms ease-in-out opacity;
+    }
+
+    .card-content .title {
+        opacity: 0;
+        font-size: 30px;
+        transform: translateY(100px) translateZ(0px);
+        transition: 400ms ease-in-out all;
+    }
+
+    .card-content .description {
+        opacity: 0;
+        transform: translateY(150px) translateZ(0px);
+        transition: 400ms ease-in-out all;
+    }
+
+    .card-content img { 
+        z-index: -1;
+        border-radius: 20px;
+        transform: scale(0.9, 0.9);
+        transition: 300ms ease-in-out all;
+    }
+
+    .card-content:hover img {
+        -webkit-box-shadow: 0px 10px 74px -3px rgba(0,0,0,1);
+        -moz-box-shadow: 0px 10px 74px -3px rgba(0,0,0,1);
+        box-shadow: 0px 10px 74px -3px rgba(0,0,0,1);
+        transform: scale(1,1);
+    }
+
+    .card {
+        box-sizing: border-box;
+        margin: 3px;
+        transform-style: preserve-3d;
+        perspective: 1000px;
+    }
+
+    .shine {
+        z-index: 1;
+        box-sizing: border-box;
+        border-radius: 20px;
+        width: 100%;
+        height: 100%;
+        display: block;
+        opacity: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,.25) 0%,rgba(255,255,255,0) 60%);
+        transition: 300ms ease-in-out opacity;
+    }
+
+</style>
+
+<body>
+    <form class="search_form" onsubmit="return search_deck()">
+        <input type="text" name="name" placeholder="Introduce el nombre del mazo"/>
+    </form>
+    <deck></deck>
+</body>
+
+<script>
+
+    const httpGet = function(theUrl)
+    {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open( "GET", theUrl, false ); // false for synchronous request
+        xmlHttp.send( null );
+        return xmlHttp.responseText;
+    }
+
+    const getDeck = function(id) {
+        const fullCards = JSON.parse(httpGet('https://cors-anywhere.herokuapp.com/https://www.keyforgegame.com/api/decks/'+ id +'/?links=cards,notes'));
+
+        const cards = fullCards.data._links.cards.map(card_id => fullCards._linked.cards.find(card => card.id === card_id));
+
+        document.getElementsByName("name")[0].value = fullCards.data.name;
+
+        const cards_html = '<h1>'+fullCards.data.name+'</h1>' + cards.map(card => '<li class="card"><div class="card-content"><span class="shine"></span><span class="title">'+card.card_title+'</span><span class="description">'+card.card_text+'</span><img src="'+card.front_image+'"></div></li>').reduce((card_html, html) => card_html + html, '<ul>') + '</ul>'
+
+        document.querySelector('deck').innerHTML = cards_html;
+    }
+
+    const subscribeEvents = function() {
+        const cards_dom = document.querySelectorAll('.card');
+
+        cards_dom.forEach(card => {
+            const card_content = card.querySelector('.card-content');
+            const title = card_content.querySelector('.title');
+            const description = card_content.querySelector('.description');
+            const shine = card_content.querySelector('.shine');
+            card.addEventListener('mouseleave', function(e) {
+                const xAxis = 0;
+                const yAxis = 0;
+                title.style.opacity = 0;
+                description.style.opacity = 0;
+                shine.style.opacity = 0;
+                title.style.transform = 'translateY(100px) translateZ(0px)';
+                description.style.transform = 'translateY(150px) translateZ(0px)';
+
+                card_content.style.transition = '300ms ease-in-out all';
+                card_content.offsetHeight;
+                card_content.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+            })
+            card.addEventListener('mouseenter', function(e) {
+                const relativeX = e.pageX - card.offsetLeft;
+                const relativeY = e.pageY - card.offsetTop;
+                const xAxis = (card.offsetWidth / 2 - relativeX) / 8;
+                const yAxis = (card.offsetHeight / 2 - relativeY) / 16;
+                title.style.opacity = 1;
+                description.style.opacity = 1;
+                shine.style.opacity = 0.7;
+                title.style.transform = 'translateY(100px) translateZ(100px)';
+                description.style.transform = 'translateY(150px) translateZ(40px)';
+
+                
+                card_content.style.transition = 'none';
+                card_content.offsetHeight;
+                card_content.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+
+                arad = Math.atan2(yAxis, xAxis),
+                angle = arad * 180 / Math.PI - 90;
+                shine.style.background = 'linear-gradient(' + angle + 'deg, rgba(255,255,255,' + (relativeY)/card.offsetHeight  + ') 0%,rgba(255,255,255,0) 80%)';
+
+            })
+            card.addEventListener('mousemove', function(e) {
+                const relativeX = e.pageX - card.offsetLeft;
+                const relativeY = e.pageY - card.offsetTop;
+                const xAxis = (card.offsetWidth / 2 - relativeX) / 8;
+                const yAxis = (card.offsetHeight / 2 - relativeY) / 16;
+
+                card_content.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+
+                arad = Math.atan2(yAxis, xAxis),
+                angle = arad * 180 / Math.PI - 90;
+                shine.style.background = 'linear-gradient(' + angle + 'deg, rgba(255,255,255,' + (relativeY)/card.offsetHeight  + ') 0%,rgba(255,255,255,0) 80%)';
+            });
+        });
+    }
+
+
+
+    const search_deck = function() {
+        const name = document.getElementsByName("name")[0].value;
+        const search_url = 'https://www.keyforgegame.com/api/decks/?page=1&page_size=10&search='+ name +'&power_level=0,11&chains=0,24&ordering=-date';
+        const result = JSON.parse(httpGet(search_url));
+        const deck_id = result.data[0].id;
+
+        getDeck(deck_id);
+        subscribeEvents();
+        return false;
+    }
+    
+
+        
+    </script>
