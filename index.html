@@ -190,10 +190,11 @@
 
     const search_deck = function() {
         const name = document.getElementsByName("name")[0].value;
-        const search_url = 'https://www.keyforgegame.com/api/decks/?page=1&page_size=10&search='+ name +'&power_level=0,11&chains=0,24&ordering=-date';
+        const search_url = 'https://cors-anywhere.herokuapp.com/https://www.keyforgegame.com/api/decks/?page=1&page_size=10&search='+ name +'&power_level=0,11&chains=0,24&ordering=-date';
         const result = JSON.parse(httpGet(search_url));
         const deck_id = result.data[0].id;
 
+        // getDeck('774cc67d-91df-4005-bc7e-7bb2b79344aa');
         getDeck(deck_id);
         subscribeEvents();
         return false;
