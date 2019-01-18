@@ -129,6 +129,54 @@
         document.querySelector('deck').innerHTML = cards_html;
     }
 
+    const on_move = function(card_content, card, shine, e) {
+        const relativeX = e.pageX - card.offsetLeft;
+        const relativeY = e.pageY - card.offsetTop;
+        const xAxis = (card.offsetWidth / 2 - relativeX) / 8;
+        const yAxis = (card.offsetHeight / 2 - relativeY) / 16;
+
+        card_content.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+
+        arad = Math.atan2(yAxis, xAxis),
+        angle = arad * 180 / Math.PI - 90;
+        shine.style.background = 'linear-gradient(' + angle + 'deg, rgba(255,255,255,' + (relativeY)/card.offsetHeight  + ') 0%,rgba(255,255,255,0) 80%)';
+    }
+
+    const on_mouse_enter = function(card_content, card, title, description, shine, e) {
+        const relativeX = e.pageX - card.offsetLeft;
+        const relativeY = e.pageY - card.offsetTop;
+        const xAxis = (card.offsetWidth / 2 - relativeX) / 8;
+        const yAxis = (card.offsetHeight / 2 - relativeY) / 16;
+        title.style.opacity = 1;
+        description.style.opacity = 1;
+        shine.style.opacity = 0.7;
+        title.style.transform = 'translateY(100px) translateZ(100px)';
+        description.style.transform = 'translateY(150px) translateZ(40px)';
+
+        
+        card_content.style.transition = 'none';
+        card_content.offsetHeight;
+        card_content.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+
+        arad = Math.atan2(yAxis, xAxis),
+        angle = arad * 180 / Math.PI - 90;
+        shine.style.background = 'linear-gradient(' + angle + 'deg, rgba(255,255,255,' + (relativeY)/card.offsetHeight  + ') 0%,rgba(255,255,255,0) 80%)';
+    }
+
+    const on_mouse_leave = function(title, description, shine, card_content) {
+        const xAxis = 0;
+        const yAxis = 0;
+        title.style.opacity = 0;
+        description.style.opacity = 0;
+        shine.style.opacity = 0;
+        title.style.transform = 'translateY(100px) translateZ(0px)';
+        description.style.transform = 'translateY(150px) translateZ(0px)';
+
+        card_content.style.transition = '300ms ease-in-out all';
+        card_content.offsetHeight;
+        card_content.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+    }
+
     const subscribeEvents = function() {
         const cards_dom = document.querySelectorAll('.card');
 
@@ -138,50 +186,29 @@
             const description = card_content.querySelector('.description');
             const shine = card_content.querySelector('.shine');
             card.addEventListener('mouseleave', function(e) {
-                const xAxis = 0;
-                const yAxis = 0;
-                title.style.opacity = 0;
-                description.style.opacity = 0;
-                shine.style.opacity = 0;
-                title.style.transform = 'translateY(100px) translateZ(0px)';
-                description.style.transform = 'translateY(150px) translateZ(0px)';
-
-                card_content.style.transition = '300ms ease-in-out all';
-                card_content.offsetHeight;
-                card_content.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+                on_mouse_leave(title, description, shine, card_content);
+            })
+            card.addEventListener('touchend', function(e) {
+                on_mouse_leave(title, description, shine, card_content);
+            })
+            card.addEventListener('touchcancel', function(e) {
+                on_mouse_leave(title, description, shine, card_content);
             })
             card.addEventListener('mouseenter', function(e) {
-                const relativeX = e.pageX - card.offsetLeft;
-                const relativeY = e.pageY - card.offsetTop;
-                const xAxis = (card.offsetWidth / 2 - relativeX) / 8;
-                const yAxis = (card.offsetHeight / 2 - relativeY) / 16;
-                title.style.opacity = 1;
-                description.style.opacity = 1;
-                shine.style.opacity = 0.7;
-                title.style.transform = 'translateY(100px) translateZ(100px)';
-                description.style.transform = 'translateY(150px) translateZ(40px)';
-
-                
-                card_content.style.transition = 'none';
-                card_content.offsetHeight;
-                card_content.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
-
-                arad = Math.atan2(yAxis, xAxis),
-                angle = arad * 180 / Math.PI - 90;
-                shine.style.background = 'linear-gradient(' + angle + 'deg, rgba(255,255,255,' + (relativeY)/card.offsetHeight  + ') 0%,rgba(255,255,255,0) 80%)';
-
+                on_mouse_enter(card_content, card, title, description, shine, e);
+            })
+            card.addEventListener('touchstart', function(e) {
+                const new_event = {pageX: e.changedTouches[0].pageX, pageY: e.changedTouches[0].pageY};
+                on_mouse_enter(card_content, card, title, description, shine, new_event);
             })
             card.addEventListener('mousemove', function(e) {
-                const relativeX = e.pageX - card.offsetLeft;
-                const relativeY = e.pageY - card.offsetTop;
-                const xAxis = (card.offsetWidth / 2 - relativeX) / 8;
-                const yAxis = (card.offsetHeight / 2 - relativeY) / 16;
+                on_move(card_content, card, shine, e);
+            });
 
-                card_content.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
-
-                arad = Math.atan2(yAxis, xAxis),
-                angle = arad * 180 / Math.PI - 90;
-                shine.style.background = 'linear-gradient(' + angle + 'deg, rgba(255,255,255,' + (relativeY)/card.offsetHeight  + ') 0%,rgba(255,255,255,0) 80%)';
+            card.addEventListener('touchmove', function(e) {
+                console.log(e);
+                const new_event = {pageX: e.changedTouches[0].pageX, pageY: e.changedTouches[0].pageY};
+                on_move(card_content, card, shine, new_event);
             });
         });
     }
